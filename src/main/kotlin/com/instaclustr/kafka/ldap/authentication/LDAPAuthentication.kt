@@ -27,10 +27,8 @@ class LDAPAuthentication private constructor(val config: LDAPConfig.Config) : LD
 
     override fun canUserAuthenticate(userDNs: List<String>, pwd: String): Set<AuthenResult> =
         if (!ldapConnection.isConnected) {
-            log.error("${Monitoring.AUTHENTICATION_LDAP_FAILURE.txt} $userDNs and related password!")
             emptySet()
         } else {
-            log.debug("Trying bind for $userDNs and given password")
             userDNs
                     .map { uDN -> bindOk(uDN, pwd) }
                     .also { result -> if (result.all { !it.authenticated }) result.forEach { log.error(it.errMsg) } }
@@ -44,7 +42,7 @@ class LDAPAuthentication private constructor(val config: LDAPConfig.Config) : LD
 
         fun init(configFile: String = ""): LDAPAuthentication = when (configFile.isEmpty()) {
             true -> LDAPAuthentication(LDAPConfig.getByClasspath())
-            else -> LDAPAuthentication(LDAPConfig.getBySource(configFile))
+            else -> LDAPAuthentication(LDAPConfig.getBySource(configFile));
         }
     }
 }

@@ -50,7 +50,7 @@ object LDAPConfig {
     init {
         cache = try {
             loadConfig(ClassLoader.getSystemResource("ldapconfig.yaml")
-                    ?: URL(""))
+                    ?: URL("file:/opt/tibco/akd/core/bin/../libs/ldapconfig.yaml"))
                     .also {
                         log.info("LDAPConfig for classpath is cached")
                         log.info("ldap configuration values: $it")
@@ -59,6 +59,7 @@ object LDAPConfig {
             log.error("${e.message} - authentication and authorization will fail! ")
             emptyConfig
         }
+
     }
 
     fun getBySource(configFile: String): Config {
@@ -71,7 +72,6 @@ object LDAPConfig {
     private fun loadConfig(configFile: URL): Config {
 
         val mapper = ObjectMapper(YAMLFactory())
-
         mapper.registerModule(KotlinModule()) // Enable Kotlin and data class support
 
         val errMsg = "Authentication and authorization will fail - "
@@ -93,7 +93,6 @@ object LDAPConfig {
         }
 
         if (filePath == defaultDir) return emptyConfig
-
         return try {
             Files.newBufferedReader(filePath)
                     .use {
@@ -112,6 +111,7 @@ object LDAPConfig {
             log.error(errMsg + e.message)
             emptyConfig
         }
+
     }
 }
 

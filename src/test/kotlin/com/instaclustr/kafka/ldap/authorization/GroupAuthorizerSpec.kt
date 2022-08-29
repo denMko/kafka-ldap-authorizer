@@ -2,54 +2,70 @@ package com.instaclustr.kafka.ldap.authorization
 
 import com.instaclustr.kafka.ldap.JAASContext
 import com.instaclustr.kafka.ldap.common.InMemoryLDAPServer
-import kafka.security.auth.Acl
-import kafka.security.auth.Operation
-import kafka.security.auth.PermissionType
-import org.amshove.kluent.shouldEqualTo
-import org.apache.kafka.common.acl.AclOperation
+import org.amshove.kluent.shouldBeEqualTo
+import org.apache.kafka.common.acl.*
+import org.apache.kafka.common.resource.PatternType
+import org.apache.kafka.common.resource.ResourcePattern
+import org.apache.kafka.common.resource.ResourceType
 import org.apache.kafka.common.security.auth.KafkaPrincipal
+import org.apache.kafka.server.authorizer.AuthorizationResult
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.util.UUID
+import java.util.*
 
 object GroupAuthorizerSpec : Spek({
 
     // create read allowance for ldap group
-    fun cReadAS(ldapGroup: String): Set<Acl> =
+    fun cReadAS(ldapGroup: String): Set<AclBinding> =
             setOf(
-                    Acl(
-                            KafkaPrincipal(KafkaPrincipal.USER_TYPE, ldapGroup),
-                            PermissionType.fromString("Allow"),
-                            "*",
-                            Operation.fromJava(AclOperation.READ)
+                AclBinding(
+                    ResourcePattern(ResourceType.GROUP,ResourcePattern.WILDCARD_RESOURCE,PatternType.UNKNOWN),
+                    AccessControlEntry(
+                        KafkaPrincipal(KafkaPrincipal.USER_TYPE, ldapGroup).name,
+                        "*",
+                        AclOperation.READ,
+                        AclPermissionType.ALLOW
+                    )
                     )
             )
 
+
+
+
     // create describe allowance for ldap group
-    fun cDescribeAS(ldapGroup1: String, ldapGroup2: String): Set<Acl> =
+    fun cDescribeAS(ldapGroup1: String, ldapGroup2: String): Set<AclBinding> =
             setOf(
-                    Acl(
-                            KafkaPrincipal(KafkaPrincipal.USER_TYPE, ldapGroup1),
-                            PermissionType.fromString("Allow"),
+                    AclBinding(
+                        ResourcePattern(ResourceType.GROUP,ResourcePattern.WILDCARD_RESOURCE,PatternType.UNKNOWN),
+                        AccessControlEntry(
+                            KafkaPrincipal(KafkaPrincipal.USER_TYPE, ldapGroup1).name,
                             "*",
-                            Operation.fromJava(AclOperation.DESCRIBE)
+                            AclOperation.DESCRIBE,
+                            AclPermissionType.ALLOW
+                        )
                     ),
-                    Acl(
-                            KafkaPrincipal(KafkaPrincipal.USER_TYPE, ldapGroup2),
-                            PermissionType.fromString("Allow"),
+                    AclBinding(
+                        ResourcePattern(ResourceType.GROUP ,ResourcePattern.WILDCARD_RESOURCE,PatternType.UNKNOWN),
+                        AccessControlEntry(
+                            KafkaPrincipal(KafkaPrincipal.USER_TYPE, ldapGroup2).name,
                             "*",
-                            Operation.fromJava(AclOperation.DESCRIBE)
+                            AclOperation.DESCRIBE,
+                            AclPermissionType.ALLOW
+                        )
                     )
             )
 
     // create write allowance for ldap group
-    fun cWriteAS(ldapGroup: String): Set<Acl> =
+    fun cWriteAS(ldapGroup: String): Set<AclBinding> =
             setOf(
-                    Acl(
-                            KafkaPrincipal(KafkaPrincipal.USER_TYPE, ldapGroup),
-                            PermissionType.fromString("Allow"),
+                    AclBinding(
+                        ResourcePattern(ResourceType.GROUP,ResourcePattern.WILDCARD_RESOURCE,PatternType.UNKNOWN),
+                        AccessControlEntry(
+                            KafkaPrincipal(KafkaPrincipal.USER_TYPE, ldapGroup).name,
                             "*",
-                            Operation.fromJava(AclOperation.WRITE)
+                            AclOperation.WRITE,
+                            AclPermissionType.ALLOW
+                        )
                     )
             )
 
@@ -67,26 +83,26 @@ object GroupAuthorizerSpec : Spek({
         }
 
         val refUserDescribeACL = mapOf(
-                Triple("srvp01", listOf("KC-tpc-01", "KP-tpc-01"), "tpc-01") to false,
-                Triple("srvc01", listOf("KC-tpc-01", "KP-tpc-01"), "tpc-01") to false,
+                Triple("srvp01", listOf("KC-tpc-01", "KP-tpc-01"), "tpc-01") to AuthorizationResult.DENIED,
+                Triple("srvc01", listOf("KC-tpc-01", "KP-tpc-01"), "tpc-01") to AuthorizationResult.DENIED,
 
-                Triple("srvp01", listOf("KC-tpc-02", "KP-tpc-02"), "tpc-02") to true,
-                Triple("srvc01", listOf("KC-tpc-02", "KP-tpc-02"), "tpc-02") to false,
+                Triple("srvp01", listOf("KC-tpc-02", "KP-tpc-02"), "tpc-02") to AuthorizationResult.ALLOWED,
+                Triple("srvc01", listOf("KC-tpc-02", "KP-tpc-02"), "tpc-02") to AuthorizationResult.DENIED,
 
-                Triple("srvp01", listOf("KC-tpc-03", "KP-tpc-03"), "tpc-03") to false,
-                Triple("srvc01", listOf("KC-tpc-03", "KP-tpc-03"), "tpc-03") to true
+                Triple("srvp01", listOf("KC-tpc-03", "KP-tpc-03"), "tpc-03") to AuthorizationResult.DENIED,
+                Triple("srvc01", listOf("KC-tpc-03", "KP-tpc-03"), "tpc-03") to AuthorizationResult.ALLOWED
         )
 
         val refUserWriteACL = mapOf(
-                Triple("srvp01", "KP-tpc-01", "tpc-01") to false,
-                Triple("srvp01", "KP-tpc-02", "tpc-02") to true,
-                Triple("srvp01", "KP-tpc-03", "tpc-03") to false
+                Triple("srvp01", "KP-tpc-01", "tpc-01") to AuthorizationResult.DENIED,
+                Triple("srvp01", "KP-tpc-02", "tpc-02") to AuthorizationResult.ALLOWED,
+                Triple("srvp01", "KP-tpc-03", "tpc-03") to AuthorizationResult.DENIED
         )
 
         val refUserReadACL = mapOf(
-                Triple("srvc01", "KC-tpc-01", "tpc-01") to false,
-                Triple("srvc01", "KC-tpc-02", "tpc-02") to false,
-                Triple("srvc01", "KC-tpc-03", "tpc-03") to true
+                Triple("srvc01", "KC-tpc-01", "tpc-01") to AuthorizationResult.DENIED,
+                Triple("srvc01", "KC-tpc-02", "tpc-02") to AuthorizationResult.DENIED,
+                Triple("srvc01", "KC-tpc-03", "tpc-03") to AuthorizationResult.ALLOWED
                 )
 
         context("describe allowance") {
@@ -99,7 +115,7 @@ object GroupAuthorizerSpec : Spek({
                             .authorize(
                                     createKP(tr.first),
                                     cDescribeAS(tr.second.first(), tr.second.last())
-                            ) shouldEqualTo result
+                            ).toString() shouldBeEqualTo result.toString()
                 }
             }
         }
@@ -114,7 +130,7 @@ object GroupAuthorizerSpec : Spek({
                             .authorize(
                                     createKP(tr.first),
                                     cWriteAS(tr.second)
-                            ) shouldEqualTo result
+                            ).toString() shouldBeEqualTo result.toString()
                 }
             }
         }
@@ -129,7 +145,7 @@ object GroupAuthorizerSpec : Spek({
                             .authorize(
                                     createKP(tr.first),
                                     cReadAS(tr.second)
-                            ) shouldEqualTo result
+                            ).toString() shouldBeEqualTo result.toString()
                 }
             }
         }

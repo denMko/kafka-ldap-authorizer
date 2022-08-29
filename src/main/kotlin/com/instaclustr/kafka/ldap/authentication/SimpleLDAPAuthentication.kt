@@ -9,6 +9,7 @@ import org.apache.kafka.common.security.auth.AuthenticateCallbackHandler
 import org.apache.kafka.common.security.plain.PlainAuthenticateCallback
 import org.slf4j.LoggerFactory
 import java.io.IOException
+import java.lang.Thread
 import javax.security.auth.callback.Callback
 import javax.security.auth.callback.NameCallback
 import javax.security.auth.callback.UnsupportedCallbackException
@@ -31,7 +32,7 @@ class SimpleLDAPAuthentication : AuthenticateCallbackHandler {
     private inline fun <reified T> Array<out Callback>.getFirst(): T? = this.firstOrNull { it is T } as T
 
     private inline fun <reified T, reified U> Array<out Callback>.other(): Callback? =
-            this.firstOrNull { it !is T && it !is U }
+        this.firstOrNull { it !is T && it !is U }
 
     @Throws(IOException::class, UnsupportedCallbackException::class)
     override fun handle(callbacks: Array<out Callback>?) {
@@ -47,22 +48,26 @@ class SimpleLDAPAuthentication : AuthenticateCallbackHandler {
 
     private fun authenticate(username: String, password: String): Boolean {
         log.debug("Authentication Start - user=$username")
-
         // always check cache before ldap lookup
-        val userDNs = LDAPConfig.getByClasspath().toUserDNNodes(username)
-        val isAuthenticated = userInCache(userDNs, password) || userCanBindInLDAP(userDNs, password)
+        val userDNs =
+            LDAPConfig.getByClasspath().toUserDNNodes(username)
+        val userInCache = userInCache(userDNs, password);
+        val userCanBindInLDAP = userCanBindInLDAP(userDNs, password)
+        val isAuthenticated = userInCache || userCanBindInLDAP
         logAuthenticationResult(isAuthenticated, username)
         return isAuthenticated
     }
 
     private fun userInCache(userDNs: List<String>, password: String): Boolean =
-            userDNs.any { uDN -> LDAPCache.userExists(uDN, password) }
+        userDNs.any { uDN -> LDAPCache.userExists(uDN, password) }
 
     private fun userCanBindInLDAP(userDNs: List<String>, password: String): Boolean =
-            LDAPAuthentication.init()
-                    .use { ldap -> ldap.canUserAuthenticate(userDNs, password) }
-                    .map { LDAPCache.userAdd(it.userDN, password) }
-                    .isNotEmpty()
+        LDAPAuthentication.init()
+            .use { ldap -> ldap.canUserAuthenticate(userDNs, password) }
+            .map { LDAPCache.userAdd(it.userDN, password) }
+            .isNotEmpty()
+
+
 
     private fun logAuthenticationResult(isAuthenticated: Boolean, username: String) {
         if (isAuthenticated) {

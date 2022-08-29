@@ -27,6 +27,7 @@ abstract class LDAPBase protected constructor(config: LDAPConfig.Config) : AutoC
             SSLUtil(TrustAllTrustManager()).createSSLSocketFactory(),
             connectOptions)
 
+
     init {
         // initialize LDAP connection
         try {
