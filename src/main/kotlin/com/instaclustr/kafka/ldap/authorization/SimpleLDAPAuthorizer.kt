@@ -39,25 +39,23 @@ class SimpleLDAPAuthorizer : AclAuthorizer() {
 
         actions?.forEachIndexed { index, action: Action ->
             // nothing to do if already authorized
-            // this includes the configurable default handling for non ACLs case - ' allow.everyone.if.no.acl.found'
+            // this includes the configurable default handling for non ACLs case - 'allow.everyone.if.no.acl.found'
             //if (super.authorize(requestContext, actions)) return true
 
-
-            var outAction = AuthorizationResult.ALLOWED;
-
-            val lOperation = action?.operation()?.toString()
-            val lResource = action?.resourcePattern()?.toString()
+            val lOperation = action.operation()?.toString()
+            val lResource = action.resourcePattern()?.toString()
             val uuid = java.util.UUID.randomUUID().toString()
             val authContext =
                 "principal=$principal, operation=$lOperation, remote_host=$host, resource=$lResource, uuid=$uuid"
 
             log.debug("Authorization Start -  $authContext")
-            
+            var outAction = AuthorizationResult.DENIED;
+
             if( superOut[index] == AuthorizationResult.ALLOWED ){
                 outAction = AuthorizationResult.ALLOWED;
-            }else {
+            } else {
                 var resourceType = action.resourcePattern()?.resourceType();
-                var resourceName = action.resourcePattern();
+                // var resourceName = action.resourcePattern();
                 var resourcePattern = action.resourcePattern()?.toString();
                 // TODO ResourceType.GROUP - under change in minor version - CAREFUL!
                 // Warning! Assuming no group considerations, thus implicitly, always empty group access control lists
@@ -96,7 +94,7 @@ class SimpleLDAPAuthorizer : AclAuthorizer() {
                     // nothing to do if empty acl set
                     if (acls.isEmpty()) {
                         log.error("${Monitoring.AUTHORIZATION_FAILED.txt} - $authContext, status=denied, reason=EMPTY_ALLOW_ACL")
-                        outAction = AuthorizationResult.DENIED;
+                        // outAction = AuthorizationResult.DENIED;
                     } else {
                         // verify membership, either cached or through LDAP - see GroupAuthorizer
                         val anonymous = KafkaPrincipal(KafkaPrincipal.USER_TYPE, "ANONYMOUS")

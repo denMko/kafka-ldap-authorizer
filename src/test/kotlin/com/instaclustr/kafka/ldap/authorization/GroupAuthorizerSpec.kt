@@ -36,7 +36,7 @@ object GroupAuthorizerSpec : Spek({
     fun cDescribeAS(ldapGroup1: String, ldapGroup2: String): Set<AclBinding> =
             setOf(
                     AclBinding(
-                        ResourcePattern(ResourceType.GROUP,ResourcePattern.WILDCARD_RESOURCE,PatternType.UNKNOWN),
+                        ResourcePattern(ResourceType.GROUP, ResourcePattern.WILDCARD_RESOURCE, PatternType.UNKNOWN),
                         AccessControlEntry(
                             KafkaPrincipal(KafkaPrincipal.USER_TYPE, ldapGroup1).name,
                             "*",
@@ -45,7 +45,7 @@ object GroupAuthorizerSpec : Spek({
                         )
                     ),
                     AclBinding(
-                        ResourcePattern(ResourceType.GROUP ,ResourcePattern.WILDCARD_RESOURCE,PatternType.UNKNOWN),
+                        ResourcePattern(ResourceType.GROUP, ResourcePattern.WILDCARD_RESOURCE, PatternType.UNKNOWN),
                         AccessControlEntry(
                             KafkaPrincipal(KafkaPrincipal.USER_TYPE, ldapGroup2).name,
                             "*",
@@ -59,7 +59,7 @@ object GroupAuthorizerSpec : Spek({
     fun cWriteAS(ldapGroup: String): Set<AclBinding> =
             setOf(
                     AclBinding(
-                        ResourcePattern(ResourceType.GROUP,ResourcePattern.WILDCARD_RESOURCE,PatternType.UNKNOWN),
+                        ResourcePattern(ResourceType.GROUP, ResourcePattern.WILDCARD_RESOURCE, PatternType.UNKNOWN),
                         AccessControlEntry(
                             KafkaPrincipal(KafkaPrincipal.USER_TYPE, ldapGroup).name,
                             "*",

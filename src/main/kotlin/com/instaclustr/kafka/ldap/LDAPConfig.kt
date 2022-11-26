@@ -50,7 +50,7 @@ object LDAPConfig {
     init {
         cache = try {
             loadConfig(ClassLoader.getSystemResource("ldapconfig.yaml")
-                    ?: URL("file:/opt/tibco/akd/core/bin/../libs/ldapconfig.yaml"))
+                    ?: URL(""))
                     .also {
                         log.info("LDAPConfig for classpath is cached")
                         log.info("ldap configuration values: $it")
@@ -116,7 +116,7 @@ object LDAPConfig {
 }
 
 // A couple of extension functions for Config
-fun LDAPConfig.Config.toUserDN(user: String) = "$usrUid=$user,$usrBaseDN".toLowerCase()
-fun LDAPConfig.Config.toAdminDN(user: String) = "$adminUid=$user,$adminBaseDN".toLowerCase()
+fun LDAPConfig.Config.toUserDN(user: String) = "$usrUid=$user,$usrBaseDN".lowercase()
+fun LDAPConfig.Config.toAdminDN(user: String) = "$adminUid=$user,$adminBaseDN".lowercase()
 
 fun LDAPConfig.Config.toUserDNNodes(user: String) = listOf(toUserDN(user), toAdminDN(user))

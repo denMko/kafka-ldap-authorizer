@@ -4,7 +4,7 @@ import com.instaclustr.kafka.ldap.LDAPConfig
 import com.instaclustr.kafka.ldap.common.LDAPCache
 import com.instaclustr.kafka.ldap.toUserDNNodes
 import com.instaclustr.kafka.ldap.common.InMemoryLDAPServer
-import org.amshove.kluent.shouldEqual
+import org.amshove.kluent.shouldBeEqualTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -48,7 +48,7 @@ object LDAPAuthenticationSpec : Spek({
                     val userDNs = LDAPConfig.getBySource(src).toUserDNNodes(user.first)
 
                     LDAPAuthentication.init(src)
-                            .canUserAuthenticate(userDNs, user.second).isNotEmpty() shouldEqual result
+                            .canUserAuthenticate(userDNs, user.second).isNotEmpty() shouldBeEqualTo result
                 }
             }
         }
@@ -62,7 +62,7 @@ object LDAPAuthenticationSpec : Spek({
                     val userDNs = LDAPConfig.getByClasspath().toUserDNNodes(user.first)
 
                     LDAPAuthentication.init()
-                            .canUserAuthenticate(userDNs, user.second).isNotEmpty() shouldEqual result
+                            .canUserAuthenticate(userDNs, user.second).isNotEmpty() shouldBeEqualTo result
                 }
             }
         }

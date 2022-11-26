@@ -18,7 +18,7 @@ class GroupAuthorizer(private val uuid: String) : AutoCloseable {
             userDNs.any { userDN -> groups.any { groupName -> LDAPCache.groupAndUserExists(groupName, userDN, uuid) } }
 
     private fun userGroupMembershipInLDAP(groups: List<String>, userDNs: List<String>): Boolean =
-            LDAPAuthorization.init(uuid,"/opt/tibco/akd/core/bin/../libs/ldapconfig.yaml")
+            LDAPAuthorization.init(uuid)
                     .use { ldap -> ldap.isUserMemberOfAny(userDNs, groups) }
                     .map { LDAPCache.groupAndUserAdd(it.groupName, it.userDN, uuid) }
                     .isNotEmpty()

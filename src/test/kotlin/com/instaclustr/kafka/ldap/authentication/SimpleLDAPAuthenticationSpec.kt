@@ -2,7 +2,7 @@ package com.instaclustr.kafka.ldap.authentication
 
 import com.instaclustr.kafka.ldap.common.InMemoryLDAPServer
 import com.instaclustr.kafka.ldap.common.LDAPCache
-import org.amshove.kluent.shouldEqualTo
+import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.common.security.plain.PlainAuthenticateCallback
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -47,7 +47,7 @@ object SimpleLDAPAuthenticationSpec : Spek({
                 it("should for $user with $pwd return $result") {
 
                     SimpleLDAPAuthentication().handle(callbacks)
-                    (callbacks.last() as PlainAuthenticateCallback).authenticated() shouldEqualTo result
+                    (callbacks.last() as PlainAuthenticateCallback).authenticated() shouldBeEqualTo result
                 }
             }
         }

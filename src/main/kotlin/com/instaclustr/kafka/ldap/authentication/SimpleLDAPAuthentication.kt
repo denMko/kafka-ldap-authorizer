@@ -49,11 +49,8 @@ class SimpleLDAPAuthentication : AuthenticateCallbackHandler {
     private fun authenticate(username: String, password: String): Boolean {
         log.debug("Authentication Start - user=$username")
         // always check cache before ldap lookup
-        val userDNs =
-            LDAPConfig.getByClasspath().toUserDNNodes(username)
-        val userInCache = userInCache(userDNs, password);
-        val userCanBindInLDAP = userCanBindInLDAP(userDNs, password)
-        val isAuthenticated = userInCache || userCanBindInLDAP
+        val userDNs = LDAPConfig.getByClasspath().toUserDNNodes(username)
+        val isAuthenticated = userInCache(userDNs, password) || userCanBindInLDAP(userDNs, password)
         logAuthenticationResult(isAuthenticated, username)
         return isAuthenticated
     }

@@ -5,7 +5,7 @@ import com.instaclustr.kafka.ldap.LDAPConfig
 import com.instaclustr.kafka.ldap.common.LDAPCache
 import com.instaclustr.kafka.ldap.toUserDNNodes
 import com.instaclustr.kafka.ldap.common.InMemoryLDAPServer
-import org.amshove.kluent.shouldEqual
+import org.amshove.kluent.shouldBeEqualTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -53,7 +53,7 @@ object LDAPAuthorizationSpec : Spek({
                     LDAPAuthorization.init(
                             java.util.UUID.randomUUID().toString(),
                             src)
-                            .isUserMemberOfAny(userDNs, usrGrp.second).size shouldEqual size
+                            .isUserMemberOfAny(userDNs, usrGrp.second).size shouldBeEqualTo size
                 }
             }
         }
@@ -67,7 +67,7 @@ object LDAPAuthorizationSpec : Spek({
                     val userDNs = LDAPConfig.getByClasspath().toUserDNNodes(usrGrp.first)
 
                     LDAPAuthorization.init(java.util.UUID.randomUUID().toString())
-                            .isUserMemberOfAny(userDNs, usrGrp.second).size shouldEqual size
+                            .isUserMemberOfAny(userDNs, usrGrp.second).size shouldBeEqualTo size
                 }
             }
         }
