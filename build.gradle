@@ -1,35 +1,41 @@
 buildscript {
     ext.kafka_version = '3.2.0'
     ext.scala_version = '2.13'
-    ext.kotlin_version = '1.7.0'
-    ext.unboundid_version = '6.0.5'
-    ext.caffeine_version = '2.8.0'
-    ext.jackson_version = '2.12.6'
-    ext.spek_version = '2.0.18'
-    ext.kluent_version = '1.68'
+    ext.kotlin_version = '1.7.21'
+    ext.unboundid_version = '6.0.6'
+    ext.caffeine_version = '3.1.2'
+    ext.jackson_version = '2.14.1'
+    ext.spek_version = '2.0.19'
+    ext.kluent_version = '1.72'
     ext.slf4j_version = '1.7.36'
+    ext.shadow_version = '7.1.2'
+    ext.versions_version = '0.44.0'
+
+    ext.java_version = '11'
 }
 
 plugins{
-    id "org.jetbrains.kotlin.jvm" version "1.7.0"
+    id 'org.jetbrains.kotlin.jvm' version "$kotlin_version"
     id 'maven-publish'
-    id 'com.github.johnrengelman.shadow' version '4.0.3'
-    id 'com.github.ben-manes.versions' version '0.42.0'
+    id 'com.github.johnrengelman.shadow' version "$shadow_version"
+    id 'com.github.ben-manes.versions' version "$versions_version"
 }
 
 
 group 'com.instaclustr.kafka.ldap'
-version '1.1-SNAPSHOT'
+version '1.2.0-SNAPSHOT'
 
-sourceCompatibility = 1.8
+sourceCompatibility = "$java_version"
 
-test { useJUnitPlatform { includeEngines 'spek2' } }
+test {
+    useJUnitPlatform {
+        includeEngines 'spek2'
+    }
+}
 
 repositories {
     mavenCentral()
-    maven { url "https://dl.bintray.com/spekframework/spek-dev" }
-
-
+    // maven { url "https://dl.bintray.com/spekframework/spek-dev" }
 }
 
 dependencies {
@@ -60,21 +66,23 @@ configurations.all {
 }
 
 compileKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "$java_version"
 }
 compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "$java_version"
 }
 
 test {
     useJUnitPlatform {
         includeEngines 'spek2'
     }
-    testLogging.events("passed", "skipped", "failed")
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
 }
 
 shadowJar {
-    baseName = "${project.name}-$scala_version-$kafka_version"
+    archiveBaseName = "${project.name}-$scala_version-${kafka_version}"
     classifier = null
 
     dependencies {
