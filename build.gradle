@@ -48,6 +48,7 @@ dependencies {
     implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jackson_version"
 
     implementation "org.apache.kafka:kafka_$scala_version:$kafka_version"
+    implementation "org.apache.kafka:kafka-metadata:$kafka_version"
     implementation "com.github.ben-manes.caffeine:caffeine:$caffeine_version"
     implementation "org.slf4j:slf4j-jdk14:$slf4j_version"
     testImplementation "org.amshove.kluent:kluent:$kluent_version"

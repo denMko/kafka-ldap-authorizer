@@ -1,7 +1,7 @@
 package com.instaclustr.kafka.ldap.authorization
 
 import com.instaclustr.kafka.ldap.Monitoring
-import kafka.security.authorizer.AclAuthorizer
+import org.apache.kafka.metadata.authorizer.StandardAuthorizer
 import org.apache.kafka.common.acl.AccessControlEntryFilter
 import org.apache.kafka.common.acl.AclBinding
 import org.apache.kafka.common.acl.AclBindingFilter
@@ -17,17 +17,17 @@ import org.slf4j.LoggerFactory
 
 
 /**
- * A class adding LDAP group membership verification to Kafka SimpleAuthorizer
+ * A class adding LDAP group membership verification to KRaft Kafka StandardAuthorizer
  * The overall prerequisite framework is the following
  * - Expecting LDAP groups in topic ACLS
  * - A principal is authorized through membership in group
  * - No group considerations, thus, empty ACL for group resource yield authorization
  * - No deny considerations, implicitly through non-membership
  *
- * See https://github.com/apache/kafka/tree/2.0/core/src/main/scala/kafka/security/auth
+ * See https://github.com/apache/kafka/blob/trunk/metadata/src/main/java/org/apache/kafka/metadata/authorizer/StandardAuthorizer.java
  */
 
-class SimpleLDAPAuthorizer : AclAuthorizer() {
+class SimpleLDAPAuthorizer : StandardAuthorizer() {
 
     override fun authorize( requestContext: AuthorizableRequestContext?, actions: MutableList<Action>?): MutableList<AuthorizationResult>? {
 
