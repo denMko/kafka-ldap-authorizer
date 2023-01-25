@@ -28,6 +28,8 @@ class LDAPAuthorization private constructor(
     private val connectionAndBindIsOk: Boolean
 
     init {
+        JAASContext.username = config.bindUsername
+        JAASContext.password = config.bindPassword
         connectionAndBindIsOk = when {
             JAASContext.username.isEmpty() || JAASContext.password.isEmpty() -> false
             !ldapConnection.isConnected -> false

@@ -20,7 +20,9 @@ object LDAPConfigSpec : Spek({
                 "cn",
                 "member",
                 2,
-                4)
+                4,
+                "",
+                "")
 
         context("getBySource - correct path to different YAML configs") {
 
@@ -36,7 +38,9 @@ object LDAPConfigSpec : Spek({
                     "grpuid",
                     "grpattrname",
                     2,
-                    4)
+                    4,
+                    "",
+                    "")
 
             val yamlFiles = mapOf(
                     Pair("correct content", "src/test/resources/ldapconfig.yaml") to refLDAPConfig,

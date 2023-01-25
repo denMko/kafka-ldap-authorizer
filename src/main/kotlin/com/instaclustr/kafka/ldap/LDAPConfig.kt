@@ -34,7 +34,9 @@ object LDAPConfig {
         val grpUid: String,
         val grpAttrName: String,
         val usrCacheExpire: Int,
-        val grpCacheExpire: Int
+        val grpCacheExpire: Int,
+        val bindUsername: String,
+        val bindPassword: String
     )
 
     private val log = LoggerFactory.getLogger(LDAPConfig::class.java)
@@ -45,7 +47,8 @@ object LDAPConfig {
             "", "",
             "", "",
             "", "", "",
-            0, 0
+            0, 0,
+            "", ""
     )
 
     init {
