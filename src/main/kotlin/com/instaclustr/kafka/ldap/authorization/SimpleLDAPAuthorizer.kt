@@ -47,13 +47,13 @@ class SimpleLDAPAuthorizer : StandardAuthorizer() {
     private val IMPLIES_DESCRIBE_CONFIGS : Set<AclOperation> = Collections.unmodifiableSet(
         EnumSet.of(DESCRIBE_CONFIGS, ALTER_CONFIGS))
 
-    override fun authorize( requestContext: AuthorizableRequestContext?, actions: MutableList<Action>?): MutableList<AuthorizationResult>? {
+    override fun authorize( requestContext: AuthorizableRequestContext?, actions: MutableList<Action>?): MutableList<AuthorizationResult> {
 
-        var out = mutableListOf<AuthorizationResult>();
+        val out = mutableListOf<AuthorizationResult>()
         val principal = requestContext?.principal()
         val host = requestContext?.clientAddress()?.hostAddress
 
-        var superOut = super.authorize(requestContext, actions);
+        val superOut = super.authorize(requestContext, actions)
 
         actions?.forEachIndexed { index, action: Action ->
             // nothing to do if already authorized
@@ -66,27 +66,27 @@ class SimpleLDAPAuthorizer : StandardAuthorizer() {
             val authContext =
                 "principal=$principal, operation=$lOperation, remote_host=$host, resource=$lResource, uuid=$uuid"
 
-            var outAction = AuthorizationResult.DENIED;
+            var outAction = AuthorizationResult.DENIED
 
 
             if( superOut[index] == AuthorizationResult.ALLOWED ){
-                outAction = AuthorizationResult.ALLOWED;
+                outAction = AuthorizationResult.ALLOWED
             } else {
                 log.debug("Authorization Start -  $authContext")
-                var resourceType = action.resourcePattern()?.resourceType();
-                var resourceName = action.resourcePattern()?.name();
+                val resourceType = action.resourcePattern()?.resourceType()
+                val resourceName = action.resourcePattern()?.name()
 
                 // TODO ResourceType.GROUP - under change in minor version - CAREFUL!
                 // Warning! Assuming no group considerations, thus implicitly, always empty group access control lists
                 if (action.resourcePattern()?.resourceType() == ResourceType.GROUP) {
                     log.debug("Authorization End - $authContext, status=authorized")
-                    outAction = AuthorizationResult.ALLOWED;
+                    outAction = AuthorizationResult.ALLOWED
                 } else {
 
                     // TODO AclPermissionType.ALLOW - under change in minor version - CAREFUL!
                     // userAdd allow access control lists for resource and given operation
 
-                    var aclBindingFilter = AclBindingFilter(
+                    val aclBindingFilter = AclBindingFilter(
                         ResourcePatternFilter(resourceType, resourceName, PatternType.MATCH),
                         AccessControlEntryFilter(
                             null,
@@ -95,7 +95,7 @@ class SimpleLDAPAuthorizer : StandardAuthorizer() {
                             AclOperation.ANY,
                             AclPermissionType.ALLOW
                         )
-                    );
+                    )
 
                     val sacls = acls(aclBindingFilter)
 
@@ -140,15 +140,15 @@ class SimpleLDAPAuthorizer : StandardAuthorizer() {
                             AuthorizationResult.DENIED -> log.error("${Monitoring.AUTHORIZATION_FAILED.txt} - $authContext, status=denied")
                         }
 
-                        outAction = isAuthorized;
+                        outAction = isAuthorized
                     }
                 }
             }
 
-            out.add(outAction);
+            out.add(outAction)
 
         }
-        return out;
+        return out
     }
 
     companion object {
