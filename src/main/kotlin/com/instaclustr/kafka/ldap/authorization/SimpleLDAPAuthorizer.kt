@@ -101,7 +101,7 @@ class SimpleLDAPAuthorizer : StandardAuthorizer() {
 
                     // switch to kotlin set, making testing easier
                     val acls = mutableSetOf<AclBinding>()
-                    sacls.forEach() {
+                    sacls.forEach {
                         val aclOperation = it.entry().operation()
                         var doAuthorize = true
 
