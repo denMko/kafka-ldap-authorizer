@@ -51,24 +51,26 @@ class LDAPAuthorization private constructor(
                 false
             }
 
-    private fun getGroupDN(groupName: String): String =
-            try {
-                val filter = Filter.createEqualityFilter(config.grpUid, groupName)
+    private fun getDN(objectName: String, baseDN: String, uid: String): String =
+        try {
+            val filter = Filter.createEqualityFilter(uid, objectName)
 
-                ldapConnection
-                        .search(SearchRequest(config.grpBaseDN, SearchScope.SUB, filter, SearchRequest.NO_ATTRIBUTES))
-                        .let {
-                            if (it.entryCount == 1)
-                                it.searchEntries[0].dn
-                            else {
-                                log.error("${Monitoring.AUTHORIZATION_SEARCH_MISS.txt} $groupName under ${config.grpBaseDN} ($uuid)")
-                                ""
-                            }
-                        }
-            } catch (e: LDAPSearchException) {
-                log.error("${Monitoring.AUTHORIZATION_SEARCH_FAILURE.txt} $groupName under ${config.grpBaseDN} ($uuid)")
-                ""
-            }
+            ldapConnection
+                .search(SearchRequest(baseDN, SearchScope.SUB, filter, SearchRequest.NO_ATTRIBUTES))
+                .let {
+                    if (it.entryCount == 1) {
+                        log.debug("for object $objectName found DN ${it.searchEntries[0].dn}")
+                        it.searchEntries[0].dn
+                    }
+                    else {
+                        log.error("${Monitoring.AUTHORIZATION_SEARCH_MISS.txt} $objectName under $baseDN ($uuid)")
+                        ""
+                    }
+                }
+        } catch (e: LDAPSearchException) {
+            log.error("${Monitoring.AUTHORIZATION_SEARCH_FAILURE.txt} $objectName under $baseDN ($uuid)")
+            ""
+        }
 
     private fun getGroupMembers(groupDN: String): List<String> =
             try {
@@ -83,20 +85,24 @@ class LDAPAuthorization private constructor(
                 emptyList()
             }
 
-    override fun isUserMemberOfAny(userDNs: List<String>, groups: List<String>): Set<AuthorResult> {
+    fun isUserMemberOfAny(user: String, groups: List<String>): Set<AuthorResult> {
         if (!connectionAndBindIsOk) {
-            log.error("${Monitoring.AUTHORIZATION_LDAP_FAILURE.txt} $userDNs membership in $groups ($uuid)")
+            log.error("${Monitoring.AUTHORIZATION_LDAP_FAILURE.txt} $user membership in $groups ($uuid)")
             return emptySet()
         }
 
         val matching = groups.flatMap { groupName ->
-            val groupDN = getGroupDN(groupName)
+            val groupDN = getDN(groupName, config.grpBaseDN, config.grpUid)
+            val userDN = getDN(user, config.usrBaseDN, config.usrUid).lowercase()
             val members = getGroupMembers(groupDN)
-            log.info("Group $groupDN has members $members, checking for presence of $userDNs")
-            members.intersect(userDNs).map { uDN -> AuthorResult(groupName, uDN) }
+            log.info("Group $groupDN has members $members, checking for presence of $user")
+
+            members.filter { member -> member == userDN }.map { uDN ->
+                AuthorResult(groupName, uDN)
+            }
         }
 
-        log.info("Checking $userDNs for membership in $groups, found: $matching")
+        log.info("Checking $user for membership in $groups, found: $matching")
         return matching.toSet()
     }
 
