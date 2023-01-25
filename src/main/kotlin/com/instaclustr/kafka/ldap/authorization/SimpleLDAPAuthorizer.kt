@@ -15,7 +15,6 @@ import org.apache.kafka.server.authorizer.AuthorizableRequestContext
 import org.apache.kafka.server.authorizer.AuthorizationResult
 import org.slf4j.LoggerFactory
 
-
 /**
  * A class adding LDAP group membership verification to KRaft Kafka StandardAuthorizer
  * The overall prerequisite framework is the following
@@ -35,7 +34,7 @@ class SimpleLDAPAuthorizer : StandardAuthorizer() {
         val principal = requestContext?.principal()
         val host = requestContext?.clientAddress()?.hostAddress
 
-        var superOut = super.authorize(requestContext,actions);
+        var superOut = super.authorize(requestContext, actions);
 
         actions?.forEachIndexed { index, action: Action ->
             // nothing to do if already authorized
@@ -48,15 +47,16 @@ class SimpleLDAPAuthorizer : StandardAuthorizer() {
             val authContext =
                 "principal=$principal, operation=$lOperation, remote_host=$host, resource=$lResource, uuid=$uuid"
 
-            log.debug("Authorization Start -  $authContext")
             var outAction = AuthorizationResult.DENIED;
+
 
             if( superOut[index] == AuthorizationResult.ALLOWED ){
                 outAction = AuthorizationResult.ALLOWED;
             } else {
+                log.debug("Authorization Start -  $authContext")
                 var resourceType = action.resourcePattern()?.resourceType();
-                // var resourceName = action.resourcePattern();
-                var resourcePattern = action.resourcePattern()?.toString();
+                var resourceName = action.resourcePattern()?.name();
+
                 // TODO ResourceType.GROUP - under change in minor version - CAREFUL!
                 // Warning! Assuming no group considerations, thus implicitly, always empty group access control lists
                 if (action.resourcePattern()?.resourceType() == ResourceType.GROUP) {
@@ -68,9 +68,9 @@ class SimpleLDAPAuthorizer : StandardAuthorizer() {
                     // userAdd allow access control lists for resource and given operation
 
                     var aclBindingFilter = AclBindingFilter(
-                        ResourcePatternFilter(resourceType, resourcePattern, PatternType.MATCH),
+                        ResourcePatternFilter(resourceType, resourceName, PatternType.MATCH),
                         AccessControlEntryFilter(
-                            principal?.name,
+                            null,
                             null,
                             action.operation(),
                             AclPermissionType.ALLOW
@@ -86,7 +86,7 @@ class SimpleLDAPAuthorizer : StandardAuthorizer() {
                     log.debug(
                         "$lOperation has following Allow ACLs for $lResource: ${
                             acls.map {
-                                it.entry().principal()
+                                it.entry().principal().split(":")[1]
                             }
                         } uuid=$uuid"
                     )
