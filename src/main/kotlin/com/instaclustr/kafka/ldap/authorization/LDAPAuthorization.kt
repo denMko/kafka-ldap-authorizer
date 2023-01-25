@@ -73,17 +73,26 @@ class LDAPAuthorization private constructor(
         }
 
     private fun getGroupMembers(groupDN: String): List<String> =
-            try {
-                if (groupDN.isNotEmpty())
-                    ldapConnection.getEntry(groupDN)
-                            ?.getAttributeValues(config.grpAttrName)
-                            ?.map { it.lowercase() } ?: emptyList()
-                else
-                    emptyList()
-            } catch (e: LDAPException) {
-                log.error("${Monitoring.AUTHORIZATION_GROUP_FAILURE.txt} - ${config.grpAttrName} - for $groupDN ($uuid)")
-                emptyList()
+        try {
+            if (groupDN.isNotEmpty()) {
+                val filter = Filter.create("(&(objectClass=user)(${config.grpAttrName}=$groupDN))")
+                ldapConnection
+                    .search(SearchRequest(config.usrBaseDN, SearchScope.SUB, filter, "sAMAccountName"))
+                    ?.let {
+                        val memberList = mutableListOf<String>()
+                        it.searchEntries.forEach { entry ->
+                            val userAttribute = entry.getAttribute("sAMAccountName")
+                            memberList += userAttribute.value
+                        }
+                        memberList
+                    } ?: emptyList()
             }
+            else
+                emptyList()
+        } catch (e: LDAPException) {
+            log.error("${Monitoring.AUTHORIZATION_GROUP_FAILURE.txt} - ${config.grpAttrName} - for $groupDN ($uuid)")
+            emptyList()
+        }
 
     fun isUserMemberOfAny(user: String, groups: List<String>): Set<AuthorResult> {
         if (!connectionAndBindIsOk) {
@@ -93,12 +102,12 @@ class LDAPAuthorization private constructor(
 
         val matching = groups.flatMap { groupName ->
             val groupDN = getDN(groupName, config.grpBaseDN, config.grpUid)
-            val userDN = getDN(user, config.usrBaseDN, config.usrUid).lowercase()
             val members = getGroupMembers(groupDN)
             log.info("Group $groupDN has members $members, checking for presence of $user")
 
-            members.filter { member -> member == userDN }.map { uDN ->
-                AuthorResult(groupName, uDN)
+
+            members.filter { member -> member == user }.map { user ->
+                AuthorResult(groupName, user)
             }
         }
 

@@ -53,7 +53,7 @@ abstract class LDAPBase protected constructor(config: LDAPConfig.Config) : AutoC
 
     open fun canUserAuthenticate(userDNs: List<String>, pwd: String): Set<AuthenResult> = emptySet()
 
-    data class AuthorResult(val groupName: String, val userDN: String)
+    data class AuthorResult(val groupName: String, val user: String)
 
     open fun isUserMemberOfAny(userDNs: List<String>, groups: List<String>): Set<AuthorResult> = emptySet()
 
