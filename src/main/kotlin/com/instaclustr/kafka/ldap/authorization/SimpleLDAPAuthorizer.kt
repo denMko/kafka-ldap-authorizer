@@ -5,6 +5,7 @@ import org.apache.kafka.metadata.authorizer.StandardAuthorizer
 import org.apache.kafka.common.acl.AccessControlEntryFilter
 import org.apache.kafka.common.acl.AclBinding
 import org.apache.kafka.common.acl.AclBindingFilter
+import org.apache.kafka.common.acl.AclOperation
 import org.apache.kafka.common.acl.AclPermissionType
 import org.apache.kafka.common.resource.PatternType
 import org.apache.kafka.common.resource.ResourcePatternFilter
@@ -14,6 +15,18 @@ import org.apache.kafka.server.authorizer.Action
 import org.apache.kafka.server.authorizer.AuthorizableRequestContext
 import org.apache.kafka.server.authorizer.AuthorizationResult
 import org.slf4j.LoggerFactory
+import java.util.Collections
+import java.util.EnumSet
+
+import org.apache.kafka.common.acl.AclOperation.ALL
+import org.apache.kafka.common.acl.AclOperation.ALTER
+import org.apache.kafka.common.acl.AclOperation.ALTER_CONFIGS
+import org.apache.kafka.common.acl.AclOperation.DELETE
+import org.apache.kafka.common.acl.AclOperation.DESCRIBE
+import org.apache.kafka.common.acl.AclOperation.DESCRIBE_CONFIGS
+import org.apache.kafka.common.acl.AclOperation.READ
+import org.apache.kafka.common.acl.AclOperation.WRITE
+
 
 /**
  * A class adding LDAP group membership verification to KRaft Kafka StandardAuthorizer
@@ -27,6 +40,12 @@ import org.slf4j.LoggerFactory
  */
 
 class SimpleLDAPAuthorizer : StandardAuthorizer() {
+
+    private val IMPLIES_DESCRIBE : Set<AclOperation> = Collections.unmodifiableSet(
+        EnumSet.of(DESCRIBE, READ, WRITE, DELETE, ALTER))
+
+    private val IMPLIES_DESCRIBE_CONFIGS : Set<AclOperation> = Collections.unmodifiableSet(
+        EnumSet.of(DESCRIBE_CONFIGS, ALTER_CONFIGS))
 
     override fun authorize( requestContext: AuthorizableRequestContext?, actions: MutableList<Action>?): MutableList<AuthorizationResult>? {
 
@@ -72,7 +91,8 @@ class SimpleLDAPAuthorizer : StandardAuthorizer() {
                         AccessControlEntryFilter(
                             null,
                             null,
-                            action.operation(),
+                            //action.operation(),
+                            AclOperation.ANY,
                             AclPermissionType.ALLOW
                         )
                     );
@@ -81,7 +101,22 @@ class SimpleLDAPAuthorizer : StandardAuthorizer() {
 
                     // switch to kotlin set, making testing easier
                     val acls = mutableSetOf<AclBinding>()
-                    sacls.forEach() { acls += it }
+                    sacls.forEach() {
+                        val aclOperation = it.entry().operation()
+                        var doAuthorize = true
+
+                        log.debug("Request operation is ${action.operation()}. Acl operation is $aclOperation")
+                        if(aclOperation != ALL && aclOperation != action.operation()){
+                            doAuthorize = when(action.operation()) {
+                                DESCRIBE ->
+                                    IMPLIES_DESCRIBE.contains(aclOperation)
+                                DESCRIBE_CONFIGS ->
+                                    IMPLIES_DESCRIBE_CONFIGS.contains(aclOperation)
+                                else -> false
+                            }
+                        }
+                        if(doAuthorize) acls += it
+                    }
 
                     log.debug(
                         "$lOperation has following Allow ACLs for $lResource: ${
